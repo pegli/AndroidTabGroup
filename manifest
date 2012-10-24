@@ -1,0 +1,18 @@
+#
+# this is your module manifest and used by Titanium
+# during compilation, packaging, distribution, etc.
+#
+version: 0.1
+apiversion: 2
+description: My module
+author: Your Name
+license: Specify your license
+copyright: Copyright (c) 2012 by Your Company
+
+
+# these should not be edited
+name: androidtabgroup
+moduleid: com.obscure.androidtabgroup
+guid: 150abc03-e379-43c8-ae85-54909527788f
+platform: android
+minsdk: 2.1.3.GA
