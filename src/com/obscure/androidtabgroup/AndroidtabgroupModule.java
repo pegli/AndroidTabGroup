@@ -12,16 +12,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.appcelerator.kroll.KrollDict;
+import org.appcelerator.kroll.KrollFunction;
 import org.appcelerator.kroll.KrollModule;
 import org.appcelerator.kroll.annotations.Kroll;
 import org.appcelerator.kroll.common.TiConfig;
-import org.appcelerator.titanium.proxy.TiBaseWindowProxy;
 import org.appcelerator.titanium.proxy.TiViewProxy;
+import org.appcelerator.titanium.proxy.TiWindowProxy;
 
-import ti.modules.titanium.ui.ActivityWindowProxy;
 import ti.modules.titanium.ui.TabGroupProxy;
 import ti.modules.titanium.ui.TabProxy;
-import android.app.Activity;
 import android.util.Log;
 
 @Kroll.module(name = "Androidtabgroup", id = "com.obscure.androidtabgroup")
@@ -34,6 +33,8 @@ public class AndroidtabgroupModule extends KrollModule {
 
 	private static final boolean DBG = TiConfig.LOGD;
 
+	private KrollFunction createWindowFunction;
+
 	public AndroidtabgroupModule() {
 		super();
 	}
@@ -45,6 +46,7 @@ public class AndroidtabgroupModule extends KrollModule {
 
 		TiViewProxy result = null;
 
+		/*
 		if ("Window".equals(key)) {
 			// TODO determine if this is a lightweight or heavyweight window
 			result = new ActivityWindowProxy(); // heavyweight?
@@ -52,12 +54,28 @@ public class AndroidtabgroupModule extends KrollModule {
 			result = new TiBaseWindowProxy(); // lightweight
 			// maybe add LW window to root activity
 			((TiBaseWindowProxy) result).addSelfToStack();
-		} else {
+		}
+		*/
+		if ("Window".equals(key) || "BaseWindow".equals(key)) {
+			if (createWindowFunction != null) {
+				HashMap p = params != null ? new HashMap(params) : null;
+				TiWindowProxy win = (TiWindowProxy) createWindowFunction.call(getKrollObject(), p);
+				Log.d(LCAT, "created window proxy "+win);
+				result = win;
+			}
+			else {
+				Log.e(LCAT, "initialization failed");
+			}
+		}
+		else {
 			// dynamically locate the class
 			for (String fmt : UIMODULE_PROXY_FORMATS) {
 				try {
 					Class<?> clazz = Class.forName(String.format(fmt, key));
 					result = (TiViewProxy) clazz.newInstance();
+					if (params != null) {
+						result.handleCreationDict(new KrollDict(params));
+					}
 					break;
 				} catch (ClassNotFoundException e) {
 					// ignore, might just be looking in the wrong package
@@ -77,9 +95,9 @@ public class AndroidtabgroupModule extends KrollModule {
 		// TODO is this required for all proxies?
 		result.setActivity(this.getActivity());
 
-		if (params != null) {
-			result.handleCreationDict(new KrollDict(params));
-		}
+//		if (params != null) {
+//			result.handleCreationDict(new KrollDict(params));
+//		}
 
 		return result;
 	}
@@ -125,12 +143,13 @@ public class AndroidtabgroupModule extends KrollModule {
 	@Kroll.method(runOnUiThread=true)
 	public TiViewProxy createWindow() {
 		Map<String,Object> labelParams = new HashMap<String,Object>();
-		labelParams.put("text", "I am tab "+"foo");
+		labelParams.put("text", "I'm a heavyweight window");
 		labelParams.put("height", 24);
 		labelParams.put("width", 200);
 		TiViewProxy label = createProxy("Label", labelParams);
 		
 		Map<String,Object> windowParams = new HashMap<String,Object>();
+		windowParams.put("fullscreen", true);
 		windowParams.put("layout", "vertical");
 		windowParams.put("backgroundColor", "green");
 		TiViewProxy window = createProxy("Window", windowParams);
@@ -156,6 +175,11 @@ public class AndroidtabgroupModule extends KrollModule {
 		window.add(label);
 		
 		return window;
+	}
+	
+	@Kroll.method
+	public void setCreateWindow(KrollFunction createWindowFunction) {
+		this.createWindowFunction = createWindowFunction;
 	}
 
 }

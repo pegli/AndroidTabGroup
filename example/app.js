@@ -1,4 +1,5 @@
 var androidtabgroup = require('com.obscure.androidtabgroup');
+androidtabgroup.foogle(Ti.UI);
 
 /*
 var tabGroup = androidtabgroup.createTabGroup();
@@ -12,12 +13,16 @@ tabGroup.open();
 */
 
 // no labels in tab windows 
-// var win = androidtabgroup.createWindow();
-// win.open();
+var win = androidtabgroup.createWindow();
+win.open();
 
 // no label in BaseWindowProxy
-var lw = androidtabgroup.createLightweightWindow();
-lw.open(lw);
+// var win = androidtabgroup.createLightweightWindow();
+// win.open();
+
+win.add(Ti.UI.createLabel({ text: "late label "}));
+
+Ti.API.info(JSON.stringify(win.children));
 
 /*
 // ti:/window.js
