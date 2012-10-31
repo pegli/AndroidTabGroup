@@ -22,9 +22,9 @@ Ti.API.info("#############################");
 // var win = androidtabgroup.createLightweightWindow();
 // win.open();
 
+/*
 win.add(Ti.UI.createLabel({ text: "late label "}));
 Ti.API.info("post-add late label");
-/*
 var label = androidtabgroup.createLabel('late native label');
 win.add(label);
 

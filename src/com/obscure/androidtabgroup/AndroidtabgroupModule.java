@@ -17,10 +17,12 @@ import org.appcelerator.kroll.KrollFunction;
 import org.appcelerator.kroll.KrollModule;
 import org.appcelerator.kroll.annotations.Kroll;
 import org.appcelerator.kroll.common.TiConfig;
+import org.appcelerator.titanium.proxy.TiBaseWindowProxy;
 import org.appcelerator.titanium.proxy.TiViewProxy;
 import org.appcelerator.titanium.proxy.TiWindowProxy;
 import org.appcelerator.titanium.view.TiUIView;
 
+import ti.modules.titanium.ui.ActivityWindowProxy;
 import ti.modules.titanium.ui.TabGroupProxy;
 import ti.modules.titanium.ui.TabProxy;
 import android.app.Activity;
@@ -60,27 +62,63 @@ public class AndroidtabgroupModule extends KrollModule {
 			((TiBaseWindowProxy) result).addSelfToStack();
 		}
 		*/
+		/*
 		if ("Window".equals(key) || "BaseWindow".equals(key)) {
 			if (createWindowFunction != null) {
 				HashMap p = params != null ? new HashMap(params) : null;
-				TiWindowProxy win = (TiWindowProxy) createWindowFunction.call(getKrollObject(), p);
+				final TiWindowProxy win = (TiWindowProxy) createWindowFunction.call(getKrollObject(), p);
 				Log.d(LCAT, "created window proxy "+win);
 				result = win;
+				
+		        win.addEventListener("open", new KrollEventCallback() {
+		            public void call(Object e) {
+		                for (TiViewProxy child : win.getChildren()) {
+		                    win.add(child);
+		                }
+		            }
+		        });
 			}
 			else {
 				Log.e(LCAT, "initialization failed");
 			}
 		}
+		*/
+        if ("Window".equals(key)) {
+            // TODO determine if this is a lightweight or heavyweight window
+            final ActivityWindowProxy win = new ActivityWindowProxy(); // heavyweight?
+            win.addEventListener("open", new KrollEventCallback() {
+                public void call(Object e) {
+                    for (TiViewProxy child : win.getChildren()) {
+                        win.add(child);
+                    }
+                }
+            });
+            result = win;
+        } else if ("BaseWindow".equals(key)) {
+            final TiBaseWindowProxy win = new TiBaseWindowProxy(); // lightweight
+            // maybe add LW window to root activity
+            win.addSelfToStack();
+            win.addEventListener("open", new KrollEventCallback() {
+                public void call(Object e) {
+                    for (TiViewProxy child : win.getChildren()) {
+                        win.add(child);
+                    }
+                }
+            });
+            result = win;
+        }
 		else {
 			// dynamically locate the class
 			for (String fmt : UIMODULE_PROXY_FORMATS) {
 				try {
 					Class<?> clazz = Class.forName(String.format(fmt, key));
 					result = (TiViewProxy) clazz.newInstance();
+                    /*
 					result.setActivity(activity);
 					if (params != null) {
 						result.handleCreationDict(new KrollDict(params));
 					}
+					*/
 //					TiUIView view = result.createView(result.getActivity());
 					TiUIView view = result.forceCreateView();
 					Log.d(LCAT, "created view "+view);
@@ -103,9 +141,9 @@ public class AndroidtabgroupModule extends KrollModule {
 		// TODO is this required for all proxies?
 		result.setActivity(this.getActivity());
 
-//		if (params != null) {
-//			result.handleCreationDict(new KrollDict(params));
-//		}
+		if (params != null) {
+			result.handleCreationDict(new KrollDict(params));
+		}
 
 		return result;
 	}
@@ -150,30 +188,14 @@ public class AndroidtabgroupModule extends KrollModule {
 	
 	@Kroll.method
 	public TiViewProxy createWindow() {
-		/*
-		Map<String,Object> labelParams = new HashMap<String,Object>();
-		labelParams.put("text", "I'm a heavyweight window");
-		labelParams.put("height", 24);
-		labelParams.put("width", 200);
-		TiViewProxy label = createProxy("Label", labelParams);
-		*/
-		
 		Map<String,Object> windowParams = new HashMap<String,Object>();
 		windowParams.put("fullscreen", true);
 		windowParams.put("layout", "vertical");
 		windowParams.put("backgroundColor", "green");
 		TiViewProxy window = createProxy("Window", windowParams);
 
-		Log.d(LCAT, "native pre-add");
-		
-		final TiViewProxy win = window;
-		window.addEventListener("open", new KrollEventCallback() {
-            public void call(Object e) {
-                win.add(createLabel("go go native"));
-                Log.d(LCAT, "native open: window children are "+win.getChildren());
-            }
-		});
-		
+        window.add(createLabel("weembaway native"));
+        window.add(createLabel("another native label"));
 		
 		return window;
 	}
