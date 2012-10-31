@@ -18,9 +18,12 @@ import org.appcelerator.kroll.annotations.Kroll;
 import org.appcelerator.kroll.common.TiConfig;
 import org.appcelerator.titanium.proxy.TiViewProxy;
 import org.appcelerator.titanium.proxy.TiWindowProxy;
+import org.appcelerator.titanium.view.TiUIView;
 
+import ti.modules.titanium.ui.LabelProxy;
 import ti.modules.titanium.ui.TabGroupProxy;
 import ti.modules.titanium.ui.TabProxy;
+import android.app.Activity;
 import android.util.Log;
 
 @Kroll.module(name = "Androidtabgroup", id = "com.obscure.androidtabgroup")
@@ -44,6 +47,7 @@ public class AndroidtabgroupModule extends KrollModule {
 			Log.e(LCAT, "key error: " + key);
 		}
 
+		Activity activity = getActivity();
 		TiViewProxy result = null;
 
 		/*
@@ -73,9 +77,13 @@ public class AndroidtabgroupModule extends KrollModule {
 				try {
 					Class<?> clazz = Class.forName(String.format(fmt, key));
 					result = (TiViewProxy) clazz.newInstance();
+					result.setActivity(activity);
 					if (params != null) {
 						result.handleCreationDict(new KrollDict(params));
 					}
+//					TiUIView view = result.createView(result.getActivity());
+					TiUIView view = result.forceCreateView();
+					Log.d(LCAT, "created view "+view);
 					break;
 				} catch (ClassNotFoundException e) {
 					// ignore, might just be looking in the wrong package
@@ -140,13 +148,15 @@ public class AndroidtabgroupModule extends KrollModule {
 		return tabGroup;
 	}
 	
-	@Kroll.method(runOnUiThread=true)
+	@Kroll.method
 	public TiViewProxy createWindow() {
+		/*
 		Map<String,Object> labelParams = new HashMap<String,Object>();
 		labelParams.put("text", "I'm a heavyweight window");
 		labelParams.put("height", 24);
 		labelParams.put("width", 200);
 		TiViewProxy label = createProxy("Label", labelParams);
+		*/
 		
 		Map<String,Object> windowParams = new HashMap<String,Object>();
 		windowParams.put("fullscreen", true);
@@ -154,7 +164,11 @@ public class AndroidtabgroupModule extends KrollModule {
 		windowParams.put("backgroundColor", "green");
 		TiViewProxy window = createProxy("Window", windowParams);
 		
-		window.add(label);
+		Log.d(LCAT, "peekView = "+window.peekView());
+		
+		window.add(createLabel("go go native!"));
+		
+		Log.d(LCAT, "window children are "+window.getChildren());
 		
 		return window;
 	}
@@ -177,9 +191,30 @@ public class AndroidtabgroupModule extends KrollModule {
 		return window;
 	}
 	
+	@Kroll.method(runOnUiThread=true)
+	public TiViewProxy createLabel(String text) {
+		Map<String,Object> labelParams = new HashMap<String,Object>();
+		labelParams.put("text", text);
+		labelParams.put("height", 24);
+		labelParams.put("backgroundColor", "red");
+		labelParams.put("width", 200);
+		TiViewProxy label = createProxy("Label", labelParams);
+
+		Log.d(LCAT, "label is "+label);
+		Log.d(LCAT, "label text is "+label.getProperty("text"));
+		return label;
+	}
+	
 	@Kroll.method
 	public void setCreateWindow(KrollFunction createWindowFunction) {
 		this.createWindowFunction = createWindowFunction;
+	}
+	
+	@Kroll.method
+	public void checkPeekView(TiWindowProxy win) {
+		if (win != null) {
+			Log.d(LCAT, "peek view is "+win.peekView());
+		}
 	}
 
 }
