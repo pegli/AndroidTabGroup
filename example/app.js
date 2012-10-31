@@ -14,11 +14,9 @@ tabGroup.open();
 
 // no labels in tab windows 
 var win = androidtabgroup.createWindow();
-Ti.API.info("pre-open");
-androidtabgroup.checkPeekView(win);
 win.open();
-Ti.API.info("post-open");
-androidtabgroup.checkPeekView(win);
+
+Ti.API.info("#############################");
 
 // no label in BaseWindowProxy
 // var win = androidtabgroup.createLightweightWindow();
@@ -26,12 +24,13 @@ androidtabgroup.checkPeekView(win);
 
 win.add(Ti.UI.createLabel({ text: "late label "}));
 Ti.API.info("post-add late label");
-
+/*
 var label = androidtabgroup.createLabel('late native label');
 win.add(label);
 
 Ti.API.info(JSON.stringify(win.children));
 androidtabgroup.checkPeekView(win);
+*/
 
 /*
 // ti:/window.js

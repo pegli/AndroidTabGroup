@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.appcelerator.kroll.KrollDict;
+import org.appcelerator.kroll.KrollEventCallback;
 import org.appcelerator.kroll.KrollFunction;
 import org.appcelerator.kroll.KrollModule;
 import org.appcelerator.kroll.annotations.Kroll;
@@ -20,7 +21,6 @@ import org.appcelerator.titanium.proxy.TiViewProxy;
 import org.appcelerator.titanium.proxy.TiWindowProxy;
 import org.appcelerator.titanium.view.TiUIView;
 
-import ti.modules.titanium.ui.LabelProxy;
 import ti.modules.titanium.ui.TabGroupProxy;
 import ti.modules.titanium.ui.TabProxy;
 import android.app.Activity;
@@ -163,12 +163,17 @@ public class AndroidtabgroupModule extends KrollModule {
 		windowParams.put("layout", "vertical");
 		windowParams.put("backgroundColor", "green");
 		TiViewProxy window = createProxy("Window", windowParams);
+
+		Log.d(LCAT, "native pre-add");
 		
-		Log.d(LCAT, "peekView = "+window.peekView());
+		final TiViewProxy win = window;
+		window.addEventListener("open", new KrollEventCallback() {
+            public void call(Object e) {
+                win.add(createLabel("go go native"));
+                Log.d(LCAT, "native open: window children are "+win.getChildren());
+            }
+		});
 		
-		window.add(createLabel("go go native!"));
-		
-		Log.d(LCAT, "window children are "+window.getChildren());
 		
 		return window;
 	}
